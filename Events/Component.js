@@ -24,13 +24,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 embedset(cmds.name, cmds.description, cmds.aliases)
                 await interaction.channel.send({ content: `${interaction.user}`, embeds: [embed], allowedMentions: { repliedUser: false } })
                 break
-            case 'mod':
-                await interaction.deferUpdate()
-                const modcmds = client.modcmds.get(option.value)
-                if (!modcmds) break
-                embedset(modcmds.name, modcmds.description, modcmds.aliases)
-                await interaction.reply({ content: `${interaction.user}`, embeds: [embed], allowedMentions: { repliedUser: false }, flags: MessageFlags.Ephemeral })
-                break
         }
     }
 })

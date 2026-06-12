@@ -67,6 +67,20 @@ module.exports = {
                                     collector.stop()
                                     break;
                                 }
+                                // 다른 디스코드 유저가 이미 같은 플레이어 ID 연동했는지 검사
+                                try {
+                                    const taken = await dbClient.query(
+                                        'SELECT user_id FROM bsscore WHERE score = $1 LIMIT 1',
+                                        [beatsaber]
+                                    )
+                                    if (taken.rows.length > 0 && taken.rows[0].user_id !== i.user.id) {
+                                        embed.setColor(Colors.Red)
+                                        embed.setDescription('이 플레이어 ID 는 이미 다른 유저가 연동했습니다.')
+                                        await i.update({ embeds: [embed], components: [] })
+                                        collector.stop()
+                                        break;
+                                    }
+                                } catch (e) { console.warn('[link] 중복 검사 실패:', e?.message ?? e) }
                                 const embed1 = new EmbedBuilder()
                                 embed1.setTitle('SUCCESS')
                                 embed1.setColor(Colors.Aqua)

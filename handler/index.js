@@ -19,19 +19,6 @@ module.exports = async (client) => {
             console.log(`Loading Command: ${file.name}`);
         }
     });
-    // ModerationCommand
-    const modcommandFiles = await glob(`${process.cwd()}/Commands/Moderator/*.js`);
-    modcommandFiles.map((value) => {
-        const file = require(value);
-        const split = value.split('/');
-        const directory = split[split.length - 2];
-
-        if (file.name) {
-            const properties = { directory, ...file }
-            client.modcmds.set(file.name, properties)
-            console.log(`Loading ModCommand: ${file.name}`);
-        }
-    })
     // Event Handler
     const eventFiles = await glob(`${process.cwd()}/Events/*.js`);
     eventFiles.map((value) => {
@@ -59,7 +46,6 @@ module.exports = async (client) => {
 
     // All Counter
     console.log(`Loading Commands : ${commandFiles.length}`)
-    console.log(`Loading ModCommands : ${modcommandFiles.length}`)
     console.log(`Loading Events : ${eventFiles.length}`)
     console.log(`Loading Slash Commands : ${slashcommandFiles.length}`)
 }
