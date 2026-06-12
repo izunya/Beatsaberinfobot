@@ -11,6 +11,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.user.bot) return;
     if (interaction.channel.type === ChannelType.DM) return;
     if (interaction.isCommand()) {
+        if(interaction.guildId == "521610949204115456"){if(interaction.channelId =="611665854542774275") return;}
         const cmd = client.slcmds.get(interaction.commandName);
         if (!cmd) return await interaction.reply({ content: ko.NotFoundCmd+en.NotFoundCmd, flags: MessageFlags.Ephemeral });
         if (cmd.permissions) {

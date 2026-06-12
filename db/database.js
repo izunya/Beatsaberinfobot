@@ -8,7 +8,7 @@ const dbconfig = {
     password: process.env.PASSWORD,
     database: process.env.DATABASE,
     port: process.env.PORT,
-    ssl: { rejectUnauthorized: false}
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 };
 
 const dbClient = new pg.Client(dbconfig);

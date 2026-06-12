@@ -4,6 +4,8 @@ const axios = require('axios');
 const { CommandInteraction, Colors, ButtonStyle, ButtonBuilder, ComponentType, ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder } = require('discord.js');
 const { ko, en } = require('../../Languages/Langs.js');
 const { writeFileSync, readFileSync, accessSync, stat } = require('fs-extra');
+const { scanBL, scanSS } = require('../../Function/Scan.js');
+const { saveSnapshot } = require('../../Function/Snapshots.js');
 
 module.exports = {
     name: "link",
@@ -68,8 +70,16 @@ module.exports = {
                                 const embed1 = new EmbedBuilder()
                                 embed1.setTitle('SUCCESS')
                                 embed1.setColor(Colors.Aqua)
-                                embed1.setDescription(`**\`${useri.name}\`** 의 계정 정보가 디스코드와 연동되었습니다! \n확인 방법은 **%\`${useri.name}\`** 혹은 **/rank** 로 확인가능합니다!`)
-                                // dbClient.query(`insert into bsscore(name,score,user_id, score_name) values('${user}','${beatsaber}','${i.user.id}','${useri.name}')`)
+                                embed1.setDescription(`**\`${useri.name}\`** 의 계정 정보가 디스코드와 연동되었습니다!\n\`/rank | ${client.config?.prefix ?? '>'}rank\`, \`/scan | ${client.config?.prefix ?? '>'}scan\` 으로 확인 가능합니다.`)
+                                await dbClient.query(
+                                    `INSERT INTO bsscore (user_id, name, score, score_name)
+                                     VALUES ($1, $2, $3, $4)
+                                     ON CONFLICT (user_id) DO UPDATE
+                                     SET name = EXCLUDED.name,
+                                         score = EXCLUDED.score,
+                                         score_name = EXCLUDED.score_name`,
+                                    [i.user.id, user, beatsaber, useri.name]
+                                )
                                 const User = {
                                     data: {
                                         name: user,
@@ -81,6 +91,13 @@ module.exports = {
                                 }
                                 writeFileSync(`${process.cwd()}/User/${i.user.id}.json`, JSON.stringify(User, null, 2))
                                 await i.update({ embeds: [embed1], components: [] })
+                                // 초기 스냅샷 저장 — /rank 즉시 사용 가능하도록
+                                const [blInit, ssInit] = await Promise.all([
+                                    scanBL(beatsaber, null).catch((e) => { console.warn('[link] BL initial scan 실패:', e?.message ?? e); return null }),
+                                    scanSS(beatsaber, null).catch((e) => { console.warn('[link] SS initial scan 실패:', e?.message ?? e); return null }),
+                                ])
+                                if (blInit) saveSnapshot(i.user.id, 'bl', blInit.newSnap)
+                                if (ssInit) saveSnapshot(i.user.id, 'ss', ssInit.newSnap)
                                 collector.stop()
                                 break
                             case 'no':

@@ -6,14 +6,19 @@ require('dotenv').config()
 
 async function str(contents) {
     const ytRegex = /previewyoutube=([^;]+)/;
-    const ytURL = ytRegex.exec(contents)[1]
-    const res = contents
+    const ytMatch = ytRegex.exec(contents)
+    const ytURL = ytMatch ? ytMatch[1] : null
+    let res = contents
         .replace(/\[img\]({STEAM_CLAN_IMAGE}\/\d+\/[a-f\d]+\.(?:gif|jpg|jpeg|png))\[\/img\]/, '\n')
         .replace(/\[img\]|\[\/img\]|\[list\]|\[\/list\]|\[u\]|\[\/u\]/g, '')
         .replace(/\[\*\]/g, '')
         .replace(/\n\n/g, '\n')
         .replace(/\[(\/)?b\]/g, '')
-        .replace(/\[previewyoutube=([^\]]+);full\]\[\/previewyoutube\]/, `https://youtu.be/${ytURL}`);
+    if (ytURL) {
+        res = res.replace(/\[previewyoutube=([^\]]+);full\]\[\/previewyoutube\]/, `https://youtu.be/${ytURL}`);
+    } else {
+        res = res.replace(/\[previewyoutube=([^\]]+);full\]\[\/previewyoutube\]/, '');
+    }
     return res;
 }
 
@@ -29,13 +34,14 @@ async function rlw() {
         const sts = await str(res.contents)
         const embed = new Discord.EmbedBuilder()
         const imageRegex = /\[img\]({STEAM_CLAN_IMAGE}\/\d+\/[a-f\d]+\.(?:gif|jpg|jpeg|png))\[\/img\]/;
-        const imageURL = imageRegex.exec(res.contents)[1]?.replace('{STEAM_CLAN_IMAGE}', 'https://clan.akamai.steamstatic.com/images/')
+        const imageMatch = imageRegex.exec(res.contents)
+        const imageURL = imageMatch?.[1]?.replace('{STEAM_CLAN_IMAGE}', 'https://clan.akamai.steamstatic.com/images/')
         const dates = fs.readFileSync('./res.txt', { encoding: 'utf-8' })
         if (dates == res.date) return false;
         fs.writeFileSync('./res.txt', `${res.date}`, { encoding: 'utf8' })
         embed.setTitle(`**${res.title}**`)
         embed.setURL(res.url)
-        embed.setImage(imageURL)
+        if (imageURL) embed.setImage(imageURL)
         embed.setDescription(sts)
         embed.setFooter({ text: 'BSPN' })
         embed.setTimestamp(parseInt(res.date) * 1000)
@@ -54,14 +60,15 @@ async function rl(message) {
         const res = response.data.appnews.newsitems[0]
         const sts = await str(res.contents)
         const imageRegex = /\[img\]({STEAM_CLAN_IMAGE}\/\d+\/[a-f\d]+\.(?:gif|jpg|jpeg|png))\[\/img\]/;
-        const imageURL = imageRegex.exec(res.contents)[1]?.replace('{STEAM_CLAN_IMAGE}', 'https://clan.akamai.steamstatic.com/images/')
+        const imageMatch = imageRegex.exec(res.contents)
+        const imageURL = imageMatch?.[1]?.replace('{STEAM_CLAN_IMAGE}', 'https://clan.akamai.steamstatic.com/images/')
         // const dates = fs.readFileSync('./res.txt', { encoding: 'utf-8' })
         // if (dates == res.date) return;
         // fs.writeFileSync('./res.txt', `${res.date}`, { encoding: 'utf8' })
         const embed = new Discord.EmbedBuilder()
         embed.setTitle(`**${res.title}**`)
         embed.setURL(res.url)
-        embed.setImage(imageURL)
+        if (imageURL) embed.setImage(imageURL)
         embed.setDescription(sts)
         embed.setFooter({ text: 'BSPN' })
         embed.setTimestamp(parseInt(res.date) * 1000)

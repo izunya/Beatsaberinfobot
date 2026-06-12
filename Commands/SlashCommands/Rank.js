@@ -33,9 +33,10 @@ module.exports = {
         const user = interaction.options.data[0]
         let member = { user: { id: undefined } }
         let id = undefined
+        let directScore = undefined
         if (!user) member = interaction.member
         if (user?.type == 3 && user?.name == 'user_id') member.user.id = interaction.client.users.cache.get(`${user.value}`)?.id
-        if (user?.type == 3 && user?.name == 'steam_id') id = user.value
+        if (user?.type == 3 && user?.name == 'steam_id') { id = user.value; directScore = user.value }
         if (user?.type == 9) member.user.id = user.member.id
         const user_id = member?.user?.id || id
         const blbutton = new ButtonBuilder()
@@ -63,7 +64,7 @@ module.exports = {
                     blbutton.setDisabled(true)
                     ssbutton.setDisabled(true)
                     await button.update({ components: [row] })
-                    const blembed = await bl(user_id)
+                    const blembed = await bl(user_id, directScore)
                     await button.channel.send({ embeds: [blembed], components: [], content: `${button.user}` })
                     await button.deleteReply()
                     return;
@@ -71,7 +72,7 @@ module.exports = {
                     blbutton.setDisabled(true)
                     ssbutton.setDisabled(true)
                     await button.update({ components: [row] })
-                    const ssembed = await ss(user_id)
+                    const ssembed = await ss(user_id, directScore)
                     await button.channel.send({ embeds: [ssembed], components: [], content: `${button.user}` })
                     await button.deleteReply()
                     return;

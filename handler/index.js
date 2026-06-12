@@ -7,10 +7,10 @@ const { glob } = require('glob');
  */
 
 module.exports = async (client) => {
-    // UserCommand
-    const commandFiles = await glob(`${process.cwd()}/Commands/User/*.js`);
+    // MessageCommand
+    const commandFiles = await glob(`${process.cwd()}/Commands/MessageCommand/*.js`);
     commandFiles.map((value) => {
-        const file = require(`${process.cwd()}\\` + value);
+        const file = require(value);
         const split = value.split('/');
         const directory = split[split.length - 2];
         if (file.name) {
@@ -22,7 +22,7 @@ module.exports = async (client) => {
     // ModerationCommand
     const modcommandFiles = await glob(`${process.cwd()}/Commands/Moderator/*.js`);
     modcommandFiles.map((value) => {
-        const file = require(`${process.cwd()}\\` + value);
+        const file = require(value);
         const split = value.split('/');
         const directory = split[split.length - 2];
 
@@ -35,8 +35,7 @@ module.exports = async (client) => {
     // Event Handler
     const eventFiles = await glob(`${process.cwd()}/Events/*.js`);
     eventFiles.map((value) => {
-        require(`${process.cwd()}\\` + value)
-        const file = require(`${process.cwd()}\\` + value);
+        const file = require(value);
         console.log("Loading Event: " + file.name)
     });
 
@@ -44,7 +43,7 @@ module.exports = async (client) => {
     const slashcommandFiles = await glob(`${process.cwd()}/Commands/SlashCommands/**/*.js`);
     const arrayOfSlashCommands = [];
     slashcommandFiles.map((value) => {
-        const file = require(`${process.cwd()}\\` + value);
+        const file = require(value);
         if (!file?.name) return;
         client.slcmds.set(file.name, file);
         console.log(`Loaded Slash Command: ${file.name}`);

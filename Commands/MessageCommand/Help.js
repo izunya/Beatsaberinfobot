@@ -1,10 +1,11 @@
 const client = require('../../index.js')
-const { Colors, EmbedBuilder, MessageFlags } = require('discord.js')
+const { Colors, EmbedBuilder } = require('discord.js')
 
 module.exports = {
     name: 'help',
+    aliases: ['도움', '도움말', 'ㅗ디ㅔ'],
     description: '사용 가능한 명령어를 안내합니다',
-    run: async (client, interaction) => {
+    run: async (client, message) => {
         const p = client.config?.prefix ?? '>'
         const embed = new EmbedBuilder()
             .setColor(Colors.Blurple)
@@ -31,6 +32,6 @@ module.exports = {
                 },
             )
             .setFooter({ text: client.config?.izuna ?? 'Created By. Izuna_1' })
-        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral })
+        await message.channel.send({ embeds: [embed] })
     },
 }
