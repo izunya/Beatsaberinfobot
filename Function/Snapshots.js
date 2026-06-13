@@ -25,11 +25,18 @@ function getSnapshot(id, platform) {
 }
 
 function saveSnapshot(id, platform, snapshot) {
+    saveSnapshots(id, { [platform]: snapshot })
+}
+
+// 여러 플랫폼 스냅샷을 한 번의 파일 IO 로 저장
+function saveSnapshots(id, byPlatform) {
     const u = readUserFile(id) ?? { data: { user_id: String(id), snapshots: {} } }
     if (!u.data) u.data = { user_id: String(id) }
     if (!u.data.snapshots) u.data.snapshots = {}
-    u.data.snapshots[platform] = snapshot
+    for (const [platform, snap] of Object.entries(byPlatform)) {
+        if (snap) u.data.snapshots[platform] = snap
+    }
     writeUserFile(id, u)
 }
 
-module.exports = { readUserFile, writeUserFile, getSnapshot, saveSnapshot, userFilePath }
+module.exports = { readUserFile, writeUserFile, getSnapshot, saveSnapshot, saveSnapshots, userFilePath }

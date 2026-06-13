@@ -6,8 +6,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 // ─── BL ────────────────────────────────────────────────────
 async function scanBL(score, prevSnap) {
-    const blu = (await axios.get(`https://api.beatleader.xyz/player/${score}`)).data
-    const top3 = (await axios.get(`https://api.beatleader.xyz/player/${score}/scores?sortBy=pp&order=desc&page=1&count=3`)).data?.data ?? []
+    // player + top3 병렬 fetch
+    const [pResp, tResp] = await Promise.all([
+        axios.get(`https://api.beatleader.xyz/player/${score}`),
+        axios.get(`https://api.beatleader.xyz/player/${score}/scores?sortBy=pp&order=desc&page=1&count=3`),
+    ])
+    const blu = pResp.data
+    const top3 = tResp.data?.data ?? []
 
     const baseline = prevSnap?.lastNewRankedScoreTime ?? 0
     const newRanked = []
@@ -45,8 +50,12 @@ async function scanBL(score, prevSnap) {
 
 // ─── SS ────────────────────────────────────────────────────
 async function scanSS(score, prevSnap) {
-    const ssu = (await axios.get(`https://scoresaber.com/api/v2/players/${score}`)).data
-    const top3 = (await axios.get(`https://scoresaber.com/api/v2/players/${score}/scores?limit=3&sort=top&page=1`)).data?.data ?? []
+    const [pResp, tResp] = await Promise.all([
+        axios.get(`https://scoresaber.com/api/v2/players/${score}`),
+        axios.get(`https://scoresaber.com/api/v2/players/${score}/scores?limit=3&sort=top&page=1`),
+    ])
+    const ssu = pResp.data
+    const top3 = tResp.data?.data ?? []
     const baseline = prevSnap?.lastNewRankedScoreTime ?? 0
     const newRanked = []
     let newestUnix = baseline

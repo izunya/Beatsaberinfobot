@@ -24,15 +24,11 @@ const { rlw } = require('./Interface/Builder.js')
 
 rlw()
 
-const RRl = new RecurrenceRule();
-RRl.dayOfWeek = [0, new Range(0, 6)];
-RRl.minute = 0o0;
-RRl.tz = 'Asia/Seoul'
-
-scheduleJob(RRl, async function () {
-    await rlw()
-})
-
+const patchnoteRule = new RecurrenceRule()
+patchnoteRule.dayOfWeek = [0, new Range(0, 6)]
+patchnoteRule.minute = 0
+patchnoteRule.tz = 'Asia/Seoul'
+scheduleJob(patchnoteRule, () => rlw())
 
 require('./handler')(client);
 client.login(process.env.TOKEN)

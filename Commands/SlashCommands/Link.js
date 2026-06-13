@@ -5,7 +5,7 @@ const { CommandInteraction, Colors, ButtonStyle, ButtonBuilder, ComponentType, A
 const { ko, en } = require('../../Languages/Langs.js');
 const { writeFileSync, readFileSync, accessSync, stat } = require('fs-extra');
 const { scanBL, scanSS } = require('../../Function/Scan.js');
-const { saveSnapshot } = require('../../Function/Snapshots.js');
+const { saveSnapshots } = require('../../Function/Snapshots.js');
 
 module.exports = {
     name: "link",
@@ -110,8 +110,7 @@ module.exports = {
                                     scanBL(beatsaber, null).catch((e) => { console.warn('[link] BL initial scan 실패:', e?.message ?? e); return null }),
                                     scanSS(beatsaber, null).catch((e) => { console.warn('[link] SS initial scan 실패:', e?.message ?? e); return null }),
                                 ])
-                                if (blInit) saveSnapshot(i.user.id, 'bl', blInit.newSnap)
-                                if (ssInit) saveSnapshot(i.user.id, 'ss', ssInit.newSnap)
+                                saveSnapshots(i.user.id, { bl: blInit?.newSnap, ss: ssInit?.newSnap })
                                 collector.stop()
                                 break
                             case 'no':

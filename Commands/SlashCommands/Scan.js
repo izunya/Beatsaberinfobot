@@ -1,38 +1,15 @@
 const client = require('../../index.js')
-const axios = require('axios')
 const {
     ButtonBuilder, ButtonStyle, EmbedBuilder, ActionRowBuilder,
     ComponentType, ApplicationCommandOptionType, Colors, MessageFlags,
 } = require('discord.js')
-const dbClient = require('../../db/database.js')
-const { readFileSync, stat } = require('fs-extra')
 const {
     scanBL, scanSS,
     blScoreLine, ssScoreLine,
     buildBLBaseEmbed, buildSSBaseEmbed,
     revealRankedMaps, getSnapshot, saveSnapshot,
 } = require('../../Function/Scan.js')
-
-async function resolveScore(id, directScore) {
-    if (directScore) return directScore
-    try {
-        await stat(`${process.cwd()}/User/${id}.json`)
-        const raw = readFileSync(`${process.cwd()}/User/${id}.json`, 'utf-8')
-        const u = JSON.parse(raw)
-        if (u?.data?.score) return u.data.score
-    } catch (_) { }
-    try {
-        const r = await dbClient.query(`SELECT score FROM bsscore WHERE user_id = $1`, [id])
-        if (r.rows.length > 0) return r.rows[0].score
-    } catch (e) { console.error('[scan] DB lookup 실패:', e?.message ?? e) }
-    try {
-        const dc = await axios.get(`https://api.beatleader.xyz/player/discord/${id}`)
-        if (dc.data?.id) return dc.data.id
-    } catch (e) {
-        if (e?.response?.status !== 404) console.warn('[scan] BL discord lookup 실패:', e?.message ?? e)
-    }
-    return null
-}
+const { resolveScore } = require('../../Function/Resolve.js')
 
 module.exports = {
     name: 'scan',
