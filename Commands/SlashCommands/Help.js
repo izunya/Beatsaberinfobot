@@ -25,9 +25,11 @@ module.exports = {
                 },
                 {
                     name: `🔄 \`/scan | ${p}scan\``,
-                    value: '라이브 API 에서 최신 데이터를 가져와 스냅샷을 갱신합니다. 이전 스냅샷이 있으면 PP/랭킹 변화량과 새로 플레이한 랭크맵을 PP 내림차순으로 보여줍니다.\n' +
-                        '• 첫 스캔 → 기준점 저장\n' +
-                        '• 이후 스캔 → 차이점 + 신규 랭크맵 reveal',
+                    value: '라이브 API 에서 최신 데이터를 가져와 BeatLeader / ScoreSaber 스냅샷을 동시에 갱신합니다. 이전 스냅샷이 있으면 PP/랭킹 변화량과 새로 플레이한 랭크맵을 PP 내림차순으로 보여줍니다.',
+                },
+                {
+                    name: `🗑️ \`/unlink | ${p}unlink\``,
+                    value: '연동된 계정과 모든 스냅샷을 삭제합니다 (확인 버튼 거침).',
                 },
             )
             .setFooter({ text: client.config?.izuna ?? 'Created By. Izuna_1' })
