@@ -1,8 +1,8 @@
 const axios = require('axios')
 const { EmbedBuilder, Colors } = require('discord.js')
 const { getSnapshot, saveSnapshot } = require('./Snapshots.js')
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const { revealRankedSection } = require('./RankedPager.js')
+const { mdText, mdLinkLabel, inlineCode, urlParam } = require('./Escape.js')
 
 // ─── BL ────────────────────────────────────────────────────
 async function scanBL(score, prevSnap) {
@@ -119,10 +119,10 @@ function blScoreLine(s, playerName) {
     const rk = (s?.rank ?? 0).toLocaleString('ko-KR')
     const pp = (s?.pp ?? 0).toFixed(2)
     const acc = ((s?.accuracy ?? 0) * 100).toFixed(2)
-    const diffName = (diff.difficultyName ?? '-').replaceAll('Plus', '+')
-    const name = song.name ?? '-'
-    const mapper = song.mapper ?? '-'
-    const link = `https://beatleader.xyz/leaderboard/global/${lb.id ?? ''}?1&search=${String(playerName).replaceAll(' ', '+')}`
+    const diffName = inlineCode((diff.difficultyName ?? '-').replaceAll('Plus', '+'))
+    const name = mdLinkLabel(song.name ?? '-')
+    const mapper = mdText(song.mapper ?? '-')
+    const link = `https://beatleader.xyz/leaderboard/global/${lb.id ?? ''}?1&search=${urlParam(playerName)}`
     const when = s?.timepost ? ` · <t:${s.timepost}:R>` : ''
     return `**#${rk}** [${name}](${link}) \`[${diffName}]\` by ${mapper} · **${pp}pp ${acc}%**${when}`
 }
@@ -137,8 +137,8 @@ function ssScoreLine(e) {
         ? (sc.accuracy * 100).toFixed(2)
         : (lb.maxScore && sc.modifiedScore ? ((sc.modifiedScore / lb.maxScore) * 100).toFixed(2) : '?')
     const diff = SS_DIFF_SHORT[lb.difficulty?.difficulty] ?? '?'
-    const name = map.songName ?? '-'
-    const mapper = map.levelAuthorName ?? '?'
+    const name = mdLinkLabel(map.songName ?? '-')
+    const mapper = mdText(map.levelAuthorName ?? '?')
     const link = lb.id ? `https://scoresaber.com/leaderboard/${lb.id}` : 'https://scoresaber.com'
     const unix = sc.createdAt ? Math.floor(new Date(sc.createdAt).getTime() / 1000) : null
     const when = unix ? ` · <t:${unix}:R>` : ''
@@ -150,7 +150,7 @@ function buildBLBaseEmbed({ player, prev, newRanked, isFirstScan }) {
     const e = new EmbedBuilder()
     e.setColor(isFirstScan ? Colors.Aqua : Colors.Green)
     if (player.avatar) e.setThumbnail(player.avatar)
-    e.setTitle(`**\`${player.name}\`** BeatLeader 스캔 결과`)
+    e.setTitle(`**\`${inlineCode(player.name)}\`** BeatLeader 스캔 결과`)
     const prevP = prev?.player
     const prevStats = prevP?.scoreStats ?? {}
     const stats = player.scoreStats ?? {}
@@ -171,7 +171,7 @@ function buildSSBaseEmbed({ player, prev, newRanked, isFirstScan }) {
     const e = new EmbedBuilder()
     e.setColor(isFirstScan ? Colors.Aqua : Colors.Green)
     if (player.avatar) e.setThumbnail(player.avatar)
-    e.setTitle(`**\`${player.name}\`** ScoreSaber 스캔 결과`)
+    e.setTitle(`**\`${inlineCode(player.name)}\`** ScoreSaber 스캔 결과`)
     const prevP = prev?.player
     const stats = player.stats ?? {}
     const prevStats = prevP?.stats ?? {}
@@ -189,27 +189,40 @@ function buildSSBaseEmbed({ player, prev, newRanked, isFirstScan }) {
     return e
 }
 
-// ─── progressive reveal — chunked editReply/edit ───────────
-async function revealRankedMaps(target, baseEmbed, lines, headerName = '새 랭크맵') {
-    if (lines.length === 0) return
-    const chunkSize = lines.length >= 10 ? 5 : 2
-    const chunks = []
-    for (let i = 0; i < lines.length; i += chunkSize) chunks.push(lines.slice(i, i + chunkSize))
-    const accumulated = []
-    for (let i = 0; i < chunks.length; i++) {
-        accumulated.push(...chunks[i])
-        const e = EmbedBuilder.from(baseEmbed.data)
-        const value = accumulated.join('\n\n').slice(0, 1024)
-        e.addFields({ name: `**${headerName}** (${accumulated.length}/${lines.length})`, value })
-        await target.edit({ embeds: [e] })
-        if (i < chunks.length - 1) await sleep(900)
-    }
+// ─── 변동 감지 ─────────────────────────────────────────────
+// 첫 스캔(prev 없음)은 무조건 변동 있음으로 취급 — 베이스라인을 보여줘야 함
+function hasBLChange(player, prev, newRanked) {
+    if (!prev) return true
+    if ((newRanked?.length ?? 0) > 0) return true
+    const pp = prev.player ?? {}
+    const ps = pp.scoreStats ?? {}
+    const cs = player.scoreStats ?? {}
+    return player.pp !== pp.pp
+        || player.rank !== pp.rank
+        || player.countryRank !== pp.countryRank
+        || cs.averageRankedAccuracy !== ps.averageRankedAccuracy
+        || cs.rankedPlayCount !== ps.rankedPlayCount
+        || cs.topPp !== ps.topPp
+}
+function hasSSChange(player, prev, newRanked) {
+    if (!prev) return true
+    if ((newRanked?.length ?? 0) > 0) return true
+    const pp = prev.player ?? {}
+    const ps = pp.stats ?? {}
+    const cs = player.stats ?? {}
+    return cs.totalPP !== ps.totalPP
+        || cs.rank !== ps.rank
+        || cs.countryRank !== ps.countryRank
+        || cs.averageAccuracy !== ps.averageAccuracy
+        || cs.totalPlayedRankedLeaderboards !== ps.totalPlayedRankedLeaderboards
+        || cs.totalReplayViews !== ps.totalReplayViews
 }
 
 module.exports = {
     scanBL, scanSS,
     blScoreLine, ssScoreLine,
     buildBLBaseEmbed, buildSSBaseEmbed,
-    revealRankedMaps,
+    revealRankedSection,
+    hasBLChange, hasSSChange,
     getSnapshot, saveSnapshot,
 }

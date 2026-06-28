@@ -3,6 +3,7 @@ const axios = require('axios')
 const dbClient = require('../db/database.js');
 const { readFileSync, stat } = require('fs-extra');
 const { getSnapshot } = require('./Snapshots.js');
+const { mdText, mdLinkLabel, inlineCode, urlParam } = require('./Escape.js');
 
 function hmdlist(hmdId) {
     // 기기 정보 리턴
@@ -164,12 +165,13 @@ async function bl(id, directScore) {
         const song = lb.song ?? {}
         const diff = lb.difficulty ?? {}
         ranks[i] = (s?.rank ?? 0).toLocaleString('ko-KR')
-        songnames[i] = song.name ?? '-'
-        if (songnames[i].length > 50) songnames[i] = songnames[i].substring(0, 50).concat("...");
-        authors[i] = song.author ?? '-'
-        songlinks[i] = `https://beatleader.xyz/leaderboard/global/${lb.id ?? ''}?1&search=${String(playerName).replaceAll(" ", "+")}`
-        diffs[i] = (diff.difficultyName ?? '-').replaceAll("Plus", "+")
-        mappers[i] = song.mapper ?? '-'
+        let rawSongName = song.name ?? '-'
+        if (rawSongName.length > 50) rawSongName = rawSongName.substring(0, 50).concat("...")
+        songnames[i] = mdLinkLabel(rawSongName)
+        authors[i] = mdLinkLabel(song.author ?? '-')
+        songlinks[i] = `https://beatleader.xyz/leaderboard/global/${lb.id ?? ''}?1&search=${urlParam(playerName)}`
+        diffs[i] = inlineCode((diff.difficultyName ?? '-').replaceAll("Plus", "+"))
+        mappers[i] = mdText(song.mapper ?? '-')
         pps[i] = `${(s?.pp ?? 0).toFixed(2)}pp`
         accs[i] = `${((s?.accuracy ?? 0) * 100).toFixed(2)}%`
         leftaccs[i] = (s?.accLeft ?? 0).toFixed(2)
@@ -190,8 +192,8 @@ async function bl(id, directScore) {
     if (blu.data.externalProfileUrl != '') profile += `\n[Steam](${blu.data.externalProfileUrl})`
     // 임베드 작성
     embed.setThumbnail(blu.data.avatar)
-    embed.setTitle(`**\`${blu.data.name}\`'s BeatLeader 정보**`)
-    if (blu.data.banned) embed.setTitle(`**\`${blu.data.name}\`'s BeatLeader 정보** [ 차단됨! ]`)
+    embed.setTitle(`**\`${inlineCode(blu.data.name)}\`'s BeatLeader 정보**`)
+    if (blu.data.banned) embed.setTitle(`**\`${inlineCode(blu.data.name)}\`'s BeatLeader 정보** [ 차단됨! ]`)
     embed.addFields({ name: '**순위**', value: `[#${rank}](https://www.beatleader.xyz/ranking/) (:flag_${blu.data.country.toLowerCase()}: [#${crank}](https://www.beatleader.xyz/ranking/1?countries=${blu.data.country}))`, inline: true })
     embed.addFields({ name: '**프로필**', value: `${profile}`, inline: true })
     embed.addFields({ name: '**PP**', value: `**현재:** ${pp}pp \n **최고:** ${blu.data.scoreStats.topPp.toFixed(2)}pp` })
@@ -345,7 +347,7 @@ async function ss(id, directScore) {
 
     // 임베드 작성 — v2: avatar / country / createdAt
     embed.setThumbnail(ssu.data.avatar || null)
-    embed.setTitle(`**\`${ssu.data.name}\`'s ScoreSaber 정보**`)
+    embed.setTitle(`**\`${inlineCode(ssu.data.name)}\`'s ScoreSaber 정보**`)
     {
         // ScoreSaber 랭킹 페이지는 50명 단위 — 본인이 위치한 페이지로 이동
         const rankPage = Math.max(1, Math.ceil((stats.rank ?? 1) / 50))
@@ -395,8 +397,8 @@ async function ss(id, directScore) {
                 : (lb.maxScore && sc.modifiedScore ? (sc.modifiedScore / lb.maxScore) * 100 : null)
             const accStr = accv != null ? `${accv.toFixed(2)}%` : '?%'
             const diff = SS_DIFF_SHORT[lb.difficulty?.difficulty] ?? '?'
-            const songName = map.songName ?? '(unknown)'
-            const mapper = map.levelAuthorName ?? '?'
+            const songName = mdLinkLabel(map.songName ?? '(unknown)')
+            const mapper = mdText(map.levelAuthorName ?? '?')
             const link = lb.id ? `[${songName}](https://scoresaber.com/leaderboard/${lb.id})` : songName
             const unix = sc.createdAt ? Math.floor(new Date(sc.createdAt).getTime() / 1000) : null
             const when = unix ? ` · <t:${unix}:R>` : ''
