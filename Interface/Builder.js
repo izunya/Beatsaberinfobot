@@ -48,43 +48,56 @@ function extractImageURL(contents) {
 
 const webhookClient = new Discord.WebhookClient({ url: process.env.WEBHOOKS })
 const url = 'https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?access_token=2a1724406dcee2de5f5412077343662c&appid=620980&count=1'
+
+// Steam News API 는 가끔 ECONNRESET / 504 던짐 — 다음 폴링에서 회복되므로 한 줄만 로깅.
+function logFetchErr(tag, err) {
+    const code = err?.code ?? err?.response?.status ?? 'ERR'
+    console.warn(`[${tag}] steam news fetch ${code}: ${err?.message ?? err}`)
+}
+
+async function fetchLatestNewsItem() {
+    const response = await axios.get(url, { responseType: 'json', timeout: 10000 })
+    return response.data.appnews.newsitems[0]
+}
+
 async function rlw() {
-    axios({
-        method: 'get',
-        url: url,
-        responseType: 'json'
-    }).then(async (response) => {
-        const res = response.data.appnews.newsitems[0]
+    let res
+    try {
+        res = await fetchLatestNewsItem()
+    } catch (err) {
+        logFetchErr('rlw', err)
+        return
+    }
+    try {
         const sts = await str(res.contents)
-        const embed = new Discord.EmbedBuilder()
         const imageURL = extractImageURL(res.contents)
         const dates = fs.readFileSync('./res.txt', { encoding: 'utf-8' })
-        if (dates == res.date) return false;
+        if (dates == res.date) return false
         fs.writeFileSync('./res.txt', `${res.date}`, { encoding: 'utf8' })
+        const embed = new Discord.EmbedBuilder()
         embed.setTitle(`**${res.title}**`)
         embed.setURL(res.url)
         if (imageURL) embed.setImage(imageURL)
         embed.setDescription(sts)
         embed.setFooter({ text: 'BSPN' })
         embed.setTimestamp(parseInt(res.date) * 1000)
-        webhookClient.send({
-            username: 'Patch Note',
-            embeds: [embed]
-        })
-    }).catch(function (error) {
-        console.error(error);
-    })
+        await webhookClient.send({ username: 'Patch Note', embeds: [embed] })
+    } catch (err) {
+        console.warn('[rlw] post failed:', err?.message ?? err)
+    }
 }
 
 async function rl(message) {
-    try{
-        const response = await axios.get(url)
-        const res = response.data.appnews.newsitems[0]
+    let res
+    try {
+        res = await fetchLatestNewsItem()
+    } catch (err) {
+        logFetchErr('rl', err)
+        return
+    }
+    try {
         const sts = await str(res.contents)
         const imageURL = extractImageURL(res.contents)
-        // const dates = fs.readFileSync('./res.txt', { encoding: 'utf-8' })
-        // if (dates == res.date) return;
-        // fs.writeFileSync('./res.txt', `${res.date}`, { encoding: 'utf8' })
         const embed = new Discord.EmbedBuilder()
         embed.setTitle(`**${res.title}**`)
         embed.setURL(res.url)
@@ -92,10 +105,9 @@ async function rl(message) {
         embed.setDescription(sts)
         embed.setFooter({ text: 'BSPN' })
         embed.setTimestamp(parseInt(res.date) * 1000)
-        message.reply({ embeds: [embed] })
-        return;
-    }catch(error){
-        console.error(error);
+        await message.reply({ embeds: [embed] })
+    } catch (err) {
+        console.warn('[rl] reply failed:', err?.message ?? err)
     }
 }
 
