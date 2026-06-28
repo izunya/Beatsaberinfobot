@@ -92,16 +92,23 @@ async function scanSS(score, prevSnap) {
 }
 
 // ─── delta helpers ─────────────────────────────────────────
+// 색·방향 매핑
+//   inverted=false (PP/정확도/카운트 등): 커질수록 좋음 → up=green / down=red
+//   inverted=true  (랭킹): 작아질수록 좋음 → down=green / up=red
 function fmtDeltaNum(curr, prev, { decimals = 0, inverted = false, unit = '' } = {}) {
     if (prev == null) return ''
     const cN = Number(curr), pN = Number(prev)
     if (!Number.isFinite(cN) || !Number.isFinite(pN)) return ''
     const d = cN - pN
     if (d === 0) return ' (변동 없음)'
-    const arrow = inverted ? (d < 0 ? '🔺' : '🔻') : (d > 0 ? '🔺' : '🔻')
-    const sign = d > 0 ? '+' : ''
-    const val = decimals > 0 ? d.toFixed(decimals) : Math.round(d).toLocaleString('ko-KR')
-    return ` ${arrow} ${sign}${val}${unit}`
+    const isGood = inverted ? d < 0 : d > 0
+    const isUp = d > 0
+    const icon = isGood
+        ? (isUp ? '<:green_arrow_up:1520162546240323594>' : '<:green_arrow_down:1520162505878540450>')
+        : (isUp ? '🔺' : '🔻')
+    const abs = Math.abs(d)
+    const val = decimals > 0 ? abs.toFixed(decimals) : Math.round(abs).toLocaleString('ko-KR')
+    return ` ${icon} ${val}${unit}`
 }
 
 // ─── per-score line formatters ─────────────────────────────
