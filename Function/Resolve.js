@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { readFileSync, stat } = require('fs-extra')
+const { readFileSync } = require('fs-extra')
 const dbClient = require('../db/database.js')
 
 // Discord ID 로부터 BL/SS 플레이어 ID(score) 를 찾는다.
@@ -7,7 +7,6 @@ const dbClient = require('../db/database.js')
 async function resolveScore(id, directScore) {
     if (directScore) return directScore
     try {
-        await stat(`${process.cwd()}/User/${id}.json`)
         const raw = readFileSync(`${process.cwd()}/User/${id}.json`, 'utf-8')
         const u = JSON.parse(raw)
         if (u?.data?.score) return u.data.score

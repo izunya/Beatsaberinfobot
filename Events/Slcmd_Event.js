@@ -7,9 +7,18 @@ module.exports = {
 };
 
 client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.SendMessages)) return;
+    if (interaction.isAutocomplete()) {
+        const cmd = client.slcmds.get(interaction.commandName)
+        if (cmd?.autocomplete) {
+            try { await cmd.autocomplete(interaction) }
+            catch (e) { console.warn('[autocomplete]', e?.message ?? e) }
+        }
+        return
+    }
+    // DM / user-install 등 guild 없는 경우 방어 — 봇은 길드 채널에서만 동작.
+    if (!interaction.guild?.members?.me?.permissions?.has(PermissionFlagsBits.SendMessages)) return;
     if (interaction.user.bot) return;
-    if (interaction.channel.type === ChannelType.DM) return;
+    if (interaction.channel?.type === ChannelType.DM) return;
     if (interaction.isCommand()) {
         if(interaction.guildId == "521610949204115456"){if(interaction.channelId =="611665854542774275") return;}
         const cmd = client.slcmds.get(interaction.commandName);
