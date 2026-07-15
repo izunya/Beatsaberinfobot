@@ -5,6 +5,7 @@ const { respondLinkedAutocomplete } = require('../../Function/LinkedAutocomplete
 const { fetchAnalyze } = require('../../Function/Recommend.js')
 const { renderTop30PNG } = require('../../Function/Top30Render.js')
 const { pickUserFromOptions } = require('../../Function/OptionPicker.js')
+const { ATTACHMENT_FOOTER } = require('../../Function/RenderUtils.js')
 
 module.exports = {
     name: 'top30',
@@ -45,7 +46,7 @@ module.exports = {
         try {
             const png = await renderTop30PNG(analyze)
             const name = `top30-${analyze?.player?.id ?? score}.png`
-            await interaction.editReply({ files: [new AttachmentBuilder(png, { name })] })
+            await interaction.editReply({ content: ATTACHMENT_FOOTER, files: [new AttachmentBuilder(png, { name })] })
         } catch (e) {
             console.warn('[top30 slash] render 실패:', e?.message ?? e)
             await interaction.editReply({

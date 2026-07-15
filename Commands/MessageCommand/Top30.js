@@ -3,6 +3,7 @@ const { EmbedBuilder, AttachmentBuilder, Colors } = require('discord.js')
 const { resolveScore } = require('../../Function/Resolve.js')
 const { fetchAnalyze } = require('../../Function/Recommend.js')
 const { renderTop30PNG } = require('../../Function/Top30Render.js')
+const { ATTACHMENT_FOOTER } = require('../../Function/RenderUtils.js')
 
 const STEAM_ID_RE = /^\d{17}$/
 const DISCORD_ID_RE = /^\d{15,20}$/
@@ -45,7 +46,7 @@ module.exports = {
         try {
             const png = await renderTop30PNG(analyze)
             const name = `top30-${analyze?.player?.id ?? score}.png`
-            await message.channel.send({ files: [new AttachmentBuilder(png, { name })] })
+            await message.channel.send({ content: ATTACHMENT_FOOTER, files: [new AttachmentBuilder(png, { name })] })
         } catch (e) {
             console.warn('[top30 msg] render 실패:', e?.message ?? e)
             await message.channel.send({

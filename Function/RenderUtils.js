@@ -36,4 +36,7 @@ function isValidPlayerId(s) {
     return typeof s === 'string' && PLAYER_ID_RE.test(s)
 }
 
-module.exports = { esc, DIFF_PILL, pill, safeAssetURL, isValidPlayerId }
+// /rec, /top30 이미지 첨부와 함께 붙이는 안내 문구.
+const ATTACHMENT_FOOTER = '자세한 내용 및 플레이리스트는 https://bs-archive-eight.vercel.app 에서 확인 및 다운로드가 가능합니다.'
+
+module.exports = { esc, DIFF_PILL, pill, safeAssetURL, isValidPlayerId, ATTACHMENT_FOOTER }

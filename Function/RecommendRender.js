@@ -72,11 +72,11 @@ html, body { background: #0b0d18; color: #e6e8f0; font-family: -apple-system, "S
 .song { color: #fff; font-size: 14px; font-weight: 700; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mapper { color: #8b90ac; font-size: 12px; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
 .pill { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; flex: 0 0 auto; }
-.num-row { color: #d0d3e6; font-size: 12px; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.num-row { color: #d0d3e6; font-size: 12px; margin-top: 6px; line-height: 1.55; word-break: keep-all; }
 .num-row b { color: #fff; }
 .num-row .gain { color: #6be26b; }
 .num-target b, .num-est b { color: #ffd666; }
-.reason-row { color: #6f7395; font-size: 11px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reason-row { color: #6f7395; font-size: 11px; margin-top: 4px; line-height: 1.5; word-break: keep-all; }
 .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; color: #7a7f9a; font-size: 12px; }
 .footer .player { color: #cfd3ea; font-weight: 700; }
 </style></head>

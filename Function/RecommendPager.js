@@ -3,6 +3,7 @@ const {
 } = require('discord.js')
 const { sliceCandidates } = require('./Recommend.js')
 const { renderRecommendPNG } = require('./RecommendRender.js')
+const { ATTACHMENT_FOOTER } = require('./RenderUtils.js')
 
 // token → { analyze, expiresAt }
 const CACHE = new Map()
@@ -71,6 +72,7 @@ async function createInitial(analyze, tab = 'update') {
     const token = remember({ analyze })
     const { slice, file } = await buildPayload({ analyze }, tab, 0)
     return {
+        content: ATTACHMENT_FOOTER,
         files: [file],
         components: componentRows(token, tab, slice.page, slice.totalPages),
     }
@@ -99,6 +101,7 @@ async function handleButton(interaction) {
         const { slice, file } = await buildPayload(entry, tab, page)
         // attachments: [] 없이 files 만 넣으면 이전 첨부가 잔류해 두 이미지가 겹쳐 보임 (discord.js v14)
         await interaction.editReply({
+            content: ATTACHMENT_FOOTER,
             files: [file],
             attachments: [],
             components: componentRows(token, tab, slice.page, slice.totalPages),
