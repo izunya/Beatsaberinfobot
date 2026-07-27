@@ -3,4 +3,5 @@ module.exports = {
     clientID: "1101842371148263484",
     prefix: ">",
     izuna: "Created By. Izuna_1",
+    krRankChannelId: "611854831170224128",
 }
