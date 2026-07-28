@@ -37,13 +37,26 @@ async function getChannel() {
     }
 }
 
+// 채널 최근 메시지 중 지난 DEDUP_WINDOW_MS 내에 동일 content 가 있으면 전송 스킵.
+// 다중 프로세스(로컬+서버) 나 재시도로 인한 중복 방어.
+const DEDUP_WINDOW_MS = 30 * 60_000
 async function sendMessage(text) {
     const ch = await getChannel()
-    if (ch?.send) {
-        try { await ch.send({ content: text }); return }
-        catch (e) { console.warn('[kr-rank] 채널 전송 실패:', e?.message ?? e) }
+    if (!ch?.send) { console.log('[kr-rank WOULD-SEND]', text); return }
+    try {
+        const recent = await ch.messages.fetch({ limit: 30 }).catch(() => null)
+        if (recent) {
+            const cutoff = Date.now() - DEDUP_WINDOW_MS
+            const dup = recent.find((m) => m.content === text && m.createdTimestamp >= cutoff)
+            if (dup) {
+                console.log('[kr-rank] 중복 감지 → 전송 스킵')
+                return
+            }
+        }
+        await ch.send({ content: text })
+    } catch (e) {
+        console.warn('[kr-rank] 채널 전송 실패:', e?.message ?? e)
     }
-    console.log('[kr-rank WOULD-SEND]', text)
 }
 
 function loadState() {
@@ -84,6 +97,9 @@ async function fetchBLKRTop() {
     }
 }
 
+// PP 변동이 표시 임계 미만 (0.001 PP) 이면 SS/BL 시스템 재계산 잡음으로 간주 — 스킵.
+const MIN_DELTA_PP = 0.001
+
 // (1) PP 변동 (콘솔 로그 + 디스코드 전송), (2) 새로 등장한 유저 (콘솔 로그만) 를 처리.
 // 스냅샷 파일이 아예 없던 첫 실행 때도 100+100명 모두 [신규] 로 찍힘 (디스코드 전송 안 함 — 스팸 방지).
 async function diffAndLog(tag, players, prevMap) {
@@ -96,7 +112,7 @@ async function diffAndLog(tag, players, prevMap) {
             console.log(`[${tag} 신규] ${p.name} · ${p.pp.toFixed(2)}pp (Top ${TOP_N} 진입)`)
             continue
         }
-        if (prev.pp === p.pp) continue
+        if (Math.abs(p.pp - prev.pp) < MIN_DELTA_PP) continue    // 무의미한 미세 변동 스킵
         console.log(`[${tag} 갱신] ${p.name} · ${prev.pp.toFixed(2)}pp → ${p.pp.toFixed(2)}pp`)
         toSend.push(formatUpdateMessage(tag, p.name, prev.pp, p.pp))
     }
